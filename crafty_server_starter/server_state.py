@@ -74,6 +74,8 @@ class ServerStateMachine:
     last_stop_time: float | None = None
     last_start_time: float | None = None
     start_stop_history: deque[float] = field(default_factory=lambda: deque(maxlen=20))
+    start_count: int = 0
+    stop_count: int = 0
     last_known_online: int = 0
     last_known_max: int = 20
     last_known_version: str = ""
@@ -108,9 +110,11 @@ class ServerStateMachine:
         elif new_state == State.STOPPED:
             self.idle_since = None
             self.last_stop_time = now
+            self.stop_count += 1
             self.start_stop_history.append(now)
         elif new_state == State.STARTING:
             self.last_start_time = now
+            self.start_count += 1
             self.start_stop_history.append(now)
         elif new_state == State.ONLINE:
             self.idle_since = None
