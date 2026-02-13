@@ -9,8 +9,6 @@ Designed to be served by the HealthServer on ``GET /metrics``.
 
 from __future__ import annotations
 
-import time
-
 from .server_state import ServerStateMachine
 
 # Prefix for all metrics

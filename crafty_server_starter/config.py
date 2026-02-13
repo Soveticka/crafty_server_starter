@@ -24,6 +24,7 @@ except ImportError:
 # Data classes
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class CraftyConfig:
     """Connection settings for the Crafty Controller API."""
@@ -58,9 +59,7 @@ class ServerConfig:
     idle_timeout_minutes: int = 10
     start_timeout_seconds: int = 180
     motd_hibernating: str = "§7⏳ Server is hibernating. Connect to wake it up!"
-    kick_message: str = (
-        "§eServer is starting up!\n§7Please reconnect in about 60 seconds."
-    )
+    kick_message: str = "§eServer is starting up!\n§7Please reconnect in about 60 seconds."
 
 
 @dataclass
@@ -128,6 +127,7 @@ class AppConfig:
 # Errors
 # ---------------------------------------------------------------------------
 
+
 class ConfigError(Exception):
     """Raised when the configuration is invalid or incomplete."""
 
@@ -135,6 +135,7 @@ class ConfigError(Exception):
 # ---------------------------------------------------------------------------
 # Loader
 # ---------------------------------------------------------------------------
+
 
 def _get(data: dict[str, Any], key: str, expected_type: type, default: Any = None) -> Any:
     """Retrieve *key* from *data*, coerce to *expected_type*, fallback to *default*."""
@@ -173,8 +174,12 @@ def _load_server(name: str, raw: dict[str, Any]) -> ServerConfig:
         listen_port=int(port),
         listen_host=_get(raw, "listen_host", str, ServerConfig.listen_host),
         edition=edition,
-        idle_timeout_minutes=_get(raw, "idle_timeout_minutes", int, ServerConfig.idle_timeout_minutes),
-        start_timeout_seconds=_get(raw, "start_timeout_seconds", int, ServerConfig.start_timeout_seconds),
+        idle_timeout_minutes=_get(
+            raw, "idle_timeout_minutes", int, ServerConfig.idle_timeout_minutes
+        ),
+        start_timeout_seconds=_get(
+            raw, "start_timeout_seconds", int, ServerConfig.start_timeout_seconds
+        ),
         motd_hibernating=_get(raw, "motd_hibernating", str, ServerConfig.motd_hibernating),
         kick_message=_get(raw, "kick_message", str, ServerConfig.kick_message),
     )
@@ -183,18 +188,28 @@ def _load_server(name: str, raw: dict[str, Any]) -> ServerConfig:
 def _load_polling(raw: dict[str, Any]) -> PollingConfig:
     return PollingConfig(
         interval_seconds=_get(raw, "interval_seconds", int, PollingConfig.interval_seconds),
-        api_retry_delay_seconds=_get(raw, "api_retry_delay_seconds", int, PollingConfig.api_retry_delay_seconds),
+        api_retry_delay_seconds=_get(
+            raw, "api_retry_delay_seconds", int, PollingConfig.api_retry_delay_seconds
+        ),
         api_max_retries=_get(raw, "api_max_retries", int, PollingConfig.api_max_retries),
     )
 
 
 def _load_cooldowns(raw: dict[str, Any]) -> CooldownConfig:
     return CooldownConfig(
-        stop_cooldown_minutes=_get(raw, "stop_cooldown_minutes", int, CooldownConfig.stop_cooldown_minutes),
-        start_grace_minutes=_get(raw, "start_grace_minutes", int, CooldownConfig.start_grace_minutes),
-        flap_window_minutes=_get(raw, "flap_window_minutes", int, CooldownConfig.flap_window_minutes),
+        stop_cooldown_minutes=_get(
+            raw, "stop_cooldown_minutes", int, CooldownConfig.stop_cooldown_minutes
+        ),
+        start_grace_minutes=_get(
+            raw, "start_grace_minutes", int, CooldownConfig.start_grace_minutes
+        ),
+        flap_window_minutes=_get(
+            raw, "flap_window_minutes", int, CooldownConfig.flap_window_minutes
+        ),
         flap_max_cycles=_get(raw, "flap_max_cycles", int, CooldownConfig.flap_max_cycles),
-        flap_backoff_minutes=_get(raw, "flap_backoff_minutes", int, CooldownConfig.flap_backoff_minutes),
+        flap_backoff_minutes=_get(
+            raw, "flap_backoff_minutes", int, CooldownConfig.flap_backoff_minutes
+        ),
     )
 
 
@@ -216,6 +231,8 @@ def _load_webhook(raw: dict[str, Any]) -> WebhookConfig:
     if cfg.enabled and not cfg.url:
         raise ConfigError("webhook.enabled is true but webhook.url is not set.")
     return cfg
+
+
 def _load_health(raw: dict[str, Any]) -> HealthConfig:
     return HealthConfig(
         enabled=_get(raw, "enabled", bool, HealthConfig.enabled),

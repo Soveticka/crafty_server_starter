@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import contextlib
 import logging
 import signal
 import sys
@@ -31,12 +32,14 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         description="Auto-hibernate and wake Minecraft servers via Crafty API v2.",
     )
     parser.add_argument(
-        "-c", "--config",
+        "-c",
+        "--config",
         default=DEFAULT_CONFIG_PATH,
         help=f"Path to YAML config file (default: {DEFAULT_CONFIG_PATH})",
     )
     parser.add_argument(
-        "-V", "--version",
+        "-V",
+        "--version",
         action="version",
         version=f"%(prog)s {__version__}",
     )
@@ -107,7 +110,8 @@ async def _run(config_path: str) -> None:
         if sm.cfg.crafty_server_id not in known_ids:
             log.error(
                 "Server '%s': crafty_server_id '%s' not found in Crafty. Skipping.",
-                name, sm.cfg.crafty_server_id,
+                name,
+                sm.cfg.crafty_server_id,
             )
 
     # -- Webhook (optional) ---------------------------------------------------
@@ -137,7 +141,7 @@ async def _run(config_path: str) -> None:
             # Wait for either a reload signal or shutdown.
             reload_task = asyncio.create_task(_reload_event.wait())
             shutdown_task = asyncio.create_task(_shutdown_event.wait())
-            done, pending = await asyncio.wait(
+            _done, pending = await asyncio.wait(
                 {reload_task, shutdown_task},
                 return_when=asyncio.FIRST_COMPLETED,
             )
@@ -163,11 +167,15 @@ async def _run(config_path: str) -> None:
                     sm.cfg.start_timeout_seconds = new_srv.start_timeout_seconds
                     sm.cfg.motd_hibernating = new_srv.motd_hibernating
                     sm.cfg.kick_message = new_srv.kick_message
-                    log.info("Server '%s': config updated (idle=%dm, motd='%s')",
-                             name, new_srv.idle_timeout_minutes, new_srv.motd_hibernating)
+                    log.info(
+                        "Server '%s': config updated (idle=%dm, motd='%s')",
+                        name,
+                        new_srv.idle_timeout_minutes,
+                        new_srv.motd_hibernating,
+                    )
 
             # Apply cooldown changes.
-            for name, sm in state_machines.items():
+            for _name, sm in state_machines.items():
                 sm.cooldowns = new_cfg.cooldowns
 
             # Apply polling interval.
@@ -177,14 +185,12 @@ async def _run(config_path: str) -> None:
 
     # -- Run ------------------------------------------------------------------
     log.info("Starting idle monitor and proxy manager…")
-    try:
+    with contextlib.suppress(asyncio.CancelledError):
         await asyncio.gather(
             idle_mon.run(_shutdown_event),
             proxy_mgr.run(_shutdown_event),
             _reload_watcher(),
         )
-    except asyncio.CancelledError:
-        pass
 
     log.info("Shutdown complete.")
 
@@ -213,10 +219,8 @@ def main() -> None:
     )
     args = _parse_args()
 
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         asyncio.run(_run(args.config))
-    except KeyboardInterrupt:
-        pass
 
 
 if __name__ == "__main__":

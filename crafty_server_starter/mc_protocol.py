@@ -16,10 +16,10 @@ import struct
 from dataclasses import dataclass
 from typing import Any
 
-
 # =====================================================================
 # VarInt helpers
 # =====================================================================
+
 
 def read_varint(stream: io.BytesIO) -> int:
     """Read a Minecraft VarInt from a byte stream."""
@@ -84,6 +84,7 @@ def read_unsigned_short(stream: io.BytesIO) -> int:
 # Packet framing
 # =====================================================================
 
+
 async def read_packet(reader: Any) -> tuple[int, io.BytesIO]:
     """Read a single MC packet from an asyncio StreamReader.
 
@@ -128,9 +129,11 @@ def build_packet(packet_id: int, payload: bytes) -> bytes:
 # Parsed packets
 # =====================================================================
 
+
 @dataclass
 class Handshake:
     """Client → Server handshake (packet 0x00 in the handshake state)."""
+
     protocol_version: int
     server_address: str
     server_port: int
@@ -148,6 +151,7 @@ class Handshake:
 @dataclass
 class LoginStart:
     """Client → Server login start (packet 0x00 in the login state)."""
+
     player_name: str
 
     @classmethod
@@ -160,6 +164,7 @@ class LoginStart:
 # =====================================================================
 # Response builders
 # =====================================================================
+
 
 def build_status_response(
     motd: str,

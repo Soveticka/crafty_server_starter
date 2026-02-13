@@ -48,7 +48,9 @@ class HealthServer:
         """Start the server, wait for shutdown, then close."""
         self._start_time = time.monotonic()
         self._server = await asyncio.start_server(
-            self._handle_request, self._host, self._port,
+            self._handle_request,
+            self._host,
+            self._port,
         )
         log.info("Health server listening on %s:%d", self._host, self._port)
 
@@ -92,7 +94,7 @@ class HealthServer:
             else:
                 self._send_response(writer, HTTPStatus.NOT_FOUND, "Not Found")
 
-        except (asyncio.TimeoutError, ConnectionResetError, EOFError):
+        except (TimeoutError, ConnectionResetError, EOFError):
             pass
         except Exception:
             log.exception("Health server request error")

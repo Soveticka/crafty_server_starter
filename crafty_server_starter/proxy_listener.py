@@ -45,9 +45,7 @@ class ProxyManager:
         self._api = crafty_api
         self._webhook = webhook
         # name → running asyncio.Server (or None)
-        self._listeners: dict[str, asyncio.Server | None] = {
-            name: None for name in state_machines
-        }
+        self._listeners: dict[str, asyncio.Server | None] = {name: None for name in state_machines}
         # Servers where we triggered a start — NEVER re-bind proxy for these
         # until they go back to STOPPED or CRASHED.
         self._start_lockout: set[str] = set()
@@ -109,20 +107,26 @@ class ProxyManager:
                 self._listeners[name] = server
                 log.info(
                     "Proxy listener started on %s:%d for server '%s'",
-                    sm.cfg.listen_host, sm.cfg.listen_port, name,
+                    sm.cfg.listen_host,
+                    sm.cfg.listen_port,
+                    name,
                 )
                 return
             except OSError as exc:
                 if attempt < 14:
                     log.debug(
                         "Port %d not free yet (attempt %d): %s",
-                        sm.cfg.listen_port, attempt + 1, exc,
+                        sm.cfg.listen_port,
+                        attempt + 1,
+                        exc,
                     )
                     await asyncio.sleep(2)
                 else:
                     log.error(
                         "Cannot bind to port %d for server '%s' after 30s: %s",
-                        sm.cfg.listen_port, name, exc,
+                        sm.cfg.listen_port,
+                        name,
+                        exc,
                     )
 
     async def _stop_listener(self, name: str) -> None:
@@ -136,7 +140,8 @@ class ProxyManager:
         sm = self._sms[name]
         log.info(
             "Proxy listener stopped on port %d for server '%s'",
-            sm.cfg.listen_port, name,
+            sm.cfg.listen_port,
+            name,
         )
 
     async def _handle_client(
@@ -163,7 +168,7 @@ class ProxyManager:
                 # ── Login ────────────────────────────────────────────
                 await self._handle_login(name, sm, reader, writer, peer)
 
-        except (EOFError, asyncio.TimeoutError, asyncio.IncompleteReadError):
+        except (EOFError, TimeoutError, asyncio.IncompleteReadError):
             # Client disconnected or timed out — ignore silently.
             pass
         except Exception:
@@ -203,7 +208,7 @@ class ProxyManager:
                 payload_long = stream.read(8)
                 writer.write(build_pong(payload_long))
                 await writer.drain()
-        except (EOFError, asyncio.TimeoutError, asyncio.IncompleteReadError):
+        except (EOFError, TimeoutError, asyncio.IncompleteReadError):
             pass
 
     async def _handle_login(
@@ -223,7 +228,10 @@ class ProxyManager:
 
         log.info(
             "Wake-up trigger from player '%s' (%s) on port %d (server '%s')",
-            login.player_name, peer[0], sm.cfg.listen_port, name,
+            login.player_name,
+            peer[0],
+            sm.cfg.listen_port,
+            name,
         )
 
         # Send Disconnect (kick) message
@@ -254,10 +262,13 @@ class ProxyManager:
                 sm.transition(State.STARTING)
                 log.info(
                     "Port %d released and start_server sent for '%s' (lockout active)",
-                    sm.cfg.listen_port, name,
+                    sm.cfg.listen_port,
+                    name,
                 )
                 if self._webhook:
-                    asyncio.ensure_future(self._webhook.notify_started(name, player_name=player_name))
+                    self._start_notify_task = asyncio.ensure_future(
+                        self._webhook.notify_started(name, player_name=login.player_name)
+                    )
             except Exception:
                 log.exception("Failed to start server '%s' via Crafty API", name)
                 # Clear lockout and re-bind the proxy so players can still see the MOTD.

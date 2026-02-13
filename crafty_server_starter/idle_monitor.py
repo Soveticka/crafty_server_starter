@@ -73,7 +73,7 @@ class IdleMonitor:
                     timeout=self._poll_cfg.interval_seconds,
                 )
                 break  # shutdown requested
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass  # normal: timeout = time to poll
 
             await self._poll_all()
@@ -95,7 +95,9 @@ class IdleMonitor:
                 self._consecutive_failures += 1
                 log.warning(
                     "Crafty API unreachable (attempt %d/%d): %s",
-                    self._consecutive_failures, self._poll_cfg.api_max_retries, exc,
+                    self._consecutive_failures,
+                    self._poll_cfg.api_max_retries,
+                    exc,
                 )
                 if self._consecutive_failures >= self._poll_cfg.api_max_retries:
                     log.error(
@@ -125,12 +127,16 @@ class IdleMonitor:
         running: bool = bool(stats.get("running", False))
         crashed: bool = bool(stats.get("crashed", False))
         online: int = int(stats.get("online", 0))
-        waiting_start: bool = bool(stats.get("waiting_start", False))
         int_ping: str = str(stats.get("int_ping_results", ""))
 
         log.debug(
             "Poll '%s': state=%s running=%s online=%d crashed=%s int_ping=%s",
-            name, sm.state.value, running, online, crashed, int_ping,
+            name,
+            sm.state.value,
+            running,
+            online,
+            crashed,
+            int_ping,
         )
 
         # ── Determine desired state ─────────────────────────────────
@@ -138,7 +144,9 @@ class IdleMonitor:
             if sm.state != State.CRASHED:
                 sm.transition(State.CRASHED)
                 if self._webhook:
-                    asyncio.ensure_future(self._webhook.notify_crashed(name))
+                    self._crash_notify_task = asyncio.ensure_future(
+                        self._webhook.notify_crashed(name)
+                    )
             return
 
         if not running:
@@ -149,7 +157,8 @@ class IdleMonitor:
                 ):
                     log.error(
                         "Server '%s': start timed out after %ds — giving up.",
-                        name, sm.cfg.start_timeout_seconds,
+                        name,
+                        sm.cfg.start_timeout_seconds,
                     )
                     sm.transition(State.STOPPED)
                 # else: still starting, keep waiting.
@@ -207,7 +216,8 @@ class IdleMonitor:
             )
             log.info(
                 "Server '%s': in start-grace period (%.0fs remaining), idle check paused.",
-                name, remaining,
+                name,
+                remaining,
             )
             return
 
@@ -218,7 +228,8 @@ class IdleMonitor:
             )
             log.info(
                 "Server '%s': in stop-cooldown (%.0fs remaining), idle check paused.",
-                name, remaining,
+                name,
+                remaining,
             )
             return
 
@@ -227,7 +238,9 @@ class IdleMonitor:
             log.warning(
                 "Server '%s': flap guard active — too many start/stop cycles "
                 "in the last %d minutes. Waiting %d minutes before next stop.",
-                name, self._cd_cfg.flap_window_minutes, self._cd_cfg.flap_backoff_minutes,
+                name,
+                self._cd_cfg.flap_window_minutes,
+                self._cd_cfg.flap_backoff_minutes,
             )
             return
 
@@ -236,14 +249,19 @@ class IdleMonitor:
             remaining = sm.cfg.idle_timeout_minutes * 60 - elapsed
             log.info(
                 "Server '%s': idle for %.0fs / %ds, shutdown in %.0fs.",
-                name, elapsed, sm.cfg.idle_timeout_minutes * 60, remaining,
+                name,
+                elapsed,
+                sm.cfg.idle_timeout_minutes * 60,
+                remaining,
             )
             return
 
         # ── Trigger shutdown ────────────────────────────────────────
         log.info(
             "Server '%s' (port %d): idle for %.0fs — triggering shutdown.",
-            name, sm.cfg.listen_port, sm.idle_elapsed(),
+            name,
+            sm.cfg.listen_port,
+            sm.idle_elapsed(),
         )
         sm.transition(State.STOPPING)
         try:

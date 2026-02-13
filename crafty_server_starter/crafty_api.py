@@ -6,11 +6,11 @@ never block the event loop.  No external HTTP library needed.
 
 from __future__ import annotations
 
+import asyncio
 import http.client
 import json
 import logging
 import ssl
-import asyncio
 from typing import Any
 from urllib.parse import urlparse
 
@@ -71,7 +71,10 @@ class CraftyApiClient:
         """Perform a synchronous HTTP(S) request.  Returns (status, parsed_json)."""
         if self._scheme == "https":
             conn = http.client.HTTPSConnection(
-                self._host, self._port, context=self._ssl_ctx, timeout=15,
+                self._host,
+                self._port,
+                context=self._ssl_ctx,
+                timeout=15,
             )
         else:
             conn = http.client.HTTPConnection(self._host, self._port, timeout=15)
@@ -119,7 +122,10 @@ class CraftyApiClient:
 
         try:
             status, data = await asyncio.to_thread(
-                self._request_sync, method, path, body_str,
+                self._request_sync,
+                method,
+                path,
+                body_str,
             )
         except (OSError, http.client.HTTPException) as exc:
             raise ConnectionError(
@@ -163,7 +169,8 @@ class CraftyApiClient:
         """``POST /api/v2/servers/{serverID}/action/start_server``."""
         log.info("API → start_server %s", server_id)
         data = await self._request(
-            "POST", f"/api/v2/servers/{server_id}/action/start_server",
+            "POST",
+            f"/api/v2/servers/{server_id}/action/start_server",
         )
         return data.get("status") == "ok"
 
@@ -171,7 +178,8 @@ class CraftyApiClient:
         """``POST /api/v2/servers/{serverID}/action/stop_server``."""
         log.info("API → stop_server %s", server_id)
         data = await self._request(
-            "POST", f"/api/v2/servers/{server_id}/action/stop_server",
+            "POST",
+            f"/api/v2/servers/{server_id}/action/stop_server",
         )
         return data.get("status") == "ok"
 

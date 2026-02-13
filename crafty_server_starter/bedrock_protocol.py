@@ -14,15 +14,28 @@ https://wiki.vg/Raknet_Protocol and https://bedrock.dev.
 from __future__ import annotations
 
 import struct
-import time
 
 # 16-byte offline message ID (RakNet "magic")
-RAKNET_MAGIC = bytes([
-    0x00, 0xFF, 0xFF, 0x00,
-    0xFE, 0xFE, 0xFE, 0xFE,
-    0xFD, 0xFD, 0xFD, 0xFD,
-    0x12, 0x34, 0x56, 0x78,
-])
+RAKNET_MAGIC = bytes(
+    [
+        0x00,
+        0xFF,
+        0xFF,
+        0x00,
+        0xFE,
+        0xFE,
+        0xFE,
+        0xFE,
+        0xFD,
+        0xFD,
+        0xFD,
+        0xFD,
+        0x12,
+        0x34,
+        0x56,
+        0x78,
+    ]
+)
 
 # Packet IDs
 ID_UNCONNECTED_PING = 0x01
@@ -69,20 +82,22 @@ def build_unconnected_pong(
     The server name string follows the Bedrock convention:
     MCPE;motd;protocol;version;online;max;guid;motd2;gamemode;gamemodenum;port4;port6
     """
-    server_name = ";".join([
-        "MCPE",
-        motd,
-        str(protocol_version),
-        version_name,
-        str(players_online),
-        str(max_players),
-        str(server_guid),
-        motd,            # MOTD line 2
-        "Survival",
-        "1",
-        str(port_v4),
-        str(port_v6),
-    ])
+    server_name = ";".join(
+        [
+            "MCPE",
+            motd,
+            str(protocol_version),
+            version_name,
+            str(players_online),
+            str(max_players),
+            str(server_guid),
+            motd,  # MOTD line 2
+            "Survival",
+            "1",
+            str(port_v4),
+            str(port_v6),
+        ]
+    )
 
     name_bytes = server_name.encode("utf-8")
 

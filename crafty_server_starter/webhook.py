@@ -23,10 +23,10 @@ from urllib.parse import urlparse
 log = logging.getLogger(__name__)
 
 # Discord embed colours
-_COLOR_GREEN = 0x2ECC71   # online / started
+_COLOR_GREEN = 0x2ECC71  # online / started
 _COLOR_YELLOW = 0xF1C40F  # stopping / idle
-_COLOR_RED = 0xE74C3C     # crashed / error
-_COLOR_BLUE = 0x3498DB    # info
+_COLOR_RED = 0xE74C3C  # crashed / error
+_COLOR_BLUE = 0x3498DB  # info
 
 
 class WebhookNotifier:
@@ -43,7 +43,10 @@ class WebhookNotifier:
     def __init__(self, webhook_url: str, server_name_label: str = ""):
         self._url = webhook_url
         self._label = server_name_label
-        self._is_discord = "discord.com/api/webhooks" in webhook_url or "discordapp.com/api/webhooks" in webhook_url
+        self._is_discord = (
+            "discord.com/api/webhooks" in webhook_url
+            or "discordapp.com/api/webhooks" in webhook_url
+        )
         parsed = urlparse(webhook_url)
         self._host = parsed.hostname or ""
         self._port = parsed.port

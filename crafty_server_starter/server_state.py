@@ -27,13 +27,13 @@ class State(enum.Enum):
 
 # Allowed transitions: from_state → {set of valid to_states}
 _VALID_TRANSITIONS: dict[State, set[State]] = {
-    State.UNKNOWN:  {State.ONLINE, State.IDLE, State.STOPPED, State.CRASHED},
-    State.ONLINE:   {State.IDLE, State.STOPPED, State.CRASHED},
-    State.IDLE:     {State.ONLINE, State.STOPPING, State.STOPPED, State.CRASHED},
+    State.UNKNOWN: {State.ONLINE, State.IDLE, State.STOPPED, State.CRASHED},
+    State.ONLINE: {State.IDLE, State.STOPPED, State.CRASHED},
+    State.IDLE: {State.ONLINE, State.STOPPING, State.STOPPED, State.CRASHED},
     State.STOPPING: {State.STOPPED, State.CRASHED},
-    State.STOPPED:  {State.STARTING, State.ONLINE},
+    State.STOPPED: {State.STARTING, State.ONLINE},
     State.STARTING: {State.ONLINE, State.STOPPED, State.CRASHED},
-    State.CRASHED:  {State.STOPPED, State.ONLINE},
+    State.CRASHED: {State.STOPPED, State.ONLINE},
 }
 
 
@@ -95,7 +95,9 @@ class ServerStateMachine:
         if new_state not in valid:
             log.warning(
                 "Server '%s': invalid transition %s → %s (ignored)",
-                self.cfg.name, self.state.value, new_state.value,
+                self.cfg.name,
+                self.state.value,
+                new_state.value,
             )
             return
 
@@ -121,7 +123,10 @@ class ServerStateMachine:
 
         log.info(
             "Server '%s' (port %d): %s → %s",
-            self.cfg.name, self.cfg.listen_port, old.value, new_state.value,
+            self.cfg.name,
+            self.cfg.listen_port,
+            old.value,
+            new_state.value,
         )
 
     # -- Timing queries -------------------------------------------------------
