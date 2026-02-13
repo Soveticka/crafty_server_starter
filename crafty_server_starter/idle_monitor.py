@@ -14,6 +14,7 @@ from .config import CooldownConfig, PollingConfig
 from .crafty_api import CraftyApiClient, CraftyApiError
 from .proxy_listener import ProxyManager
 from .server_state import ServerStateMachine, State
+from .webhook import WebhookNotifier
 
 log = logging.getLogger(__name__)
 
@@ -43,12 +44,14 @@ class IdleMonitor:
         proxy_manager: ProxyManager,
         polling_cfg: PollingConfig,
         cooldown_cfg: CooldownConfig,
+        webhook: WebhookNotifier | None = None,
     ):
         self._sms = state_machines
         self._api = crafty_api
         self._proxy = proxy_manager
         self._poll_cfg = polling_cfg
         self._cd_cfg = cooldown_cfg
+        self._webhook = webhook
         self._consecutive_failures = 0
 
     # ------------------------------------------------------------------
@@ -134,6 +137,8 @@ class IdleMonitor:
         if crashed:
             if sm.state != State.CRASHED:
                 sm.transition(State.CRASHED)
+                if self._webhook:
+                    asyncio.ensure_future(self._webhook.notify_crashed(name))
             return
 
         if not running:
@@ -243,6 +248,8 @@ class IdleMonitor:
         sm.transition(State.STOPPING)
         try:
             await self._api.stop_server(sm.cfg.crafty_server_id)
+            if self._webhook:
+                await self._webhook.notify_stopped(name, idle_seconds=sm.idle_elapsed())
         except Exception:
             log.exception("Failed to stop server '%s' via Crafty API", name)
             # Revert to IDLE so we retry on the next poll.

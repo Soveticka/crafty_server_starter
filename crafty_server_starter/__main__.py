@@ -72,6 +72,7 @@ async def _run(config_path: str) -> None:
     from .crafty_api import CraftyApiClient
     from .idle_monitor import IdleMonitor
     from .proxy_listener import ProxyManager
+    from .webhook import WebhookNotifier
 
     api = CraftyApiClient(
         base_url=cfg.crafty.base_url,
@@ -103,13 +104,23 @@ async def _run(config_path: str) -> None:
                 name, sm.cfg.crafty_server_id,
             )
 
-    proxy_mgr = ProxyManager(state_machines=state_machines, crafty_api=api)
+    # -- Webhook (optional) ---------------------------------------------------
+    webhook: WebhookNotifier | None = None
+    if cfg.webhook.enabled:
+        webhook = WebhookNotifier(
+            webhook_url=cfg.webhook.url,
+            server_name_label=cfg.webhook.label,
+        )
+        log.info("Webhook notifications enabled")
+
+    proxy_mgr = ProxyManager(state_machines=state_machines, crafty_api=api, webhook=webhook)
     idle_mon = IdleMonitor(
         state_machines=state_machines,
         crafty_api=api,
         proxy_manager=proxy_mgr,
         polling_cfg=cfg.polling,
         cooldown_cfg=cfg.cooldowns,
+        webhook=webhook,
     )
 
     # -- Run ------------------------------------------------------------------

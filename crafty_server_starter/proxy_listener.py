@@ -23,6 +23,7 @@ from .mc_protocol import (
     read_packet,
 )
 from .server_state import ServerStateMachine, State
+from .webhook import WebhookNotifier
 
 log = logging.getLogger(__name__)
 
@@ -38,9 +39,11 @@ class ProxyManager:
         self,
         state_machines: dict[str, ServerStateMachine],
         crafty_api: CraftyApiClient,
+        webhook: WebhookNotifier | None = None,
     ):
         self._sms = state_machines
         self._api = crafty_api
+        self._webhook = webhook
         # name → running asyncio.Server (or None)
         self._listeners: dict[str, asyncio.Server | None] = {
             name: None for name in state_machines
@@ -253,6 +256,8 @@ class ProxyManager:
                     "Port %d released and start_server sent for '%s' (lockout active)",
                     sm.cfg.listen_port, name,
                 )
+                if self._webhook:
+                    asyncio.ensure_future(self._webhook.notify_started(name, player_name=player_name))
             except Exception:
                 log.exception("Failed to start server '%s' via Crafty API", name)
                 # Clear lockout and re-bind the proxy so players can still see the MOTD.

@@ -54,3 +54,11 @@ logging:
   file: "/var/log/crafty-server-starter/service.log"
   max_bytes: 10485760    # 10 MB
   backup_count: 5
+
+# ── Webhook notifications ─────────────────────────────────────
+# Sends Discord embeds (or generic JSON POST) on:
+#   server started, stopped, crashed
+webhook:
+  enabled: false
+  url: "https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN"
+  label: "Crafty Server Starter"    # shown in embed footer

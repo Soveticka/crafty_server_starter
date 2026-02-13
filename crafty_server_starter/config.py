@@ -83,6 +83,15 @@ class CooldownConfig:
 
 
 @dataclass
+class WebhookConfig:
+    """Webhook notification settings."""
+
+    enabled: bool = False
+    url: str = ""
+    label: str = "Crafty Server Starter"
+
+
+@dataclass
 class LoggingConfig:
     """Logging destination and rotation settings."""
 
@@ -101,6 +110,7 @@ class AppConfig:
     polling: PollingConfig = field(default_factory=PollingConfig)
     cooldowns: CooldownConfig = field(default_factory=CooldownConfig)
     logging: LoggingConfig = field(default_factory=LoggingConfig)
+    webhook: WebhookConfig = field(default_factory=WebhookConfig)
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +192,15 @@ def _load_logging(raw: dict[str, Any]) -> LoggingConfig:
     )
 
 
+def _load_webhook(raw: dict[str, Any]) -> WebhookConfig:
+    cfg = WebhookConfig(
+        enabled=_get(raw, "enabled", bool, WebhookConfig.enabled),
+        url=_get(raw, "url", str, WebhookConfig.url),
+        label=_get(raw, "label", str, WebhookConfig.label),
+    )
+    if cfg.enabled and not cfg.url:
+        raise ConfigError("webhook.enabled is true but webhook.url is not set.")
+    return cfg
 def load_config(path: str | Path) -> AppConfig:
     """Load and validate configuration from a YAML file.
 
@@ -242,12 +261,16 @@ def load_config(path: str | Path) -> AppConfig:
     # -- Logging --
     logging_cfg = _load_logging(raw.get("logging", {}))
 
+    # -- Webhook --
+    webhook_cfg = _load_webhook(raw.get("webhook", {}))
+
     config = AppConfig(
         crafty=crafty,
         servers=servers,
         polling=polling,
         cooldowns=cooldowns,
         logging=logging_cfg,
+        webhook=webhook_cfg,
     )
 
     # Resolve the API token from the environment.
