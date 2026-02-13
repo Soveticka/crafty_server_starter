@@ -21,6 +21,8 @@ DEFAULT_CONFIG_PATH = "/etc/crafty-server-starter/config.yaml"
 
 # Will be set by main() so signal handlers can request shutdown.
 _shutdown_event: asyncio.Event | None = None
+_reload_event: asyncio.Event | None = None
+_config_path: str = DEFAULT_CONFIG_PATH
 
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -43,7 +45,9 @@ def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 async def _run(config_path: str) -> None:
     """Main async entry point — load config, build components, run the event loop."""
-    global _shutdown_event
+    global _shutdown_event, _reload_event, _config_path
+
+    _config_path = config_path
 
     # -- Load config ----------------------------------------------------------
     try:
@@ -56,13 +60,15 @@ async def _run(config_path: str) -> None:
     log.info("Crafty Server Starter v%s starting", __version__)
     log.info("Managing %d server(s)", len(cfg.servers))
 
-    # -- Shutdown event -------------------------------------------------------
+    # -- Events ---------------------------------------------------------------
     _shutdown_event = asyncio.Event()
+    _reload_event = asyncio.Event()
 
     loop = asyncio.get_running_loop()
     if sys.platform != "win32":
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, _request_shutdown, sig)
+        loop.add_signal_handler(signal.SIGHUP, _request_reload)
     else:
         # Windows: add_signal_handler is not supported.
         # KeyboardInterrupt (Ctrl+C) is caught in main() instead.
@@ -112,12 +118,59 @@ async def _run(config_path: str) -> None:
         cooldown_cfg=cfg.cooldowns,
     )
 
+    # -- Reload watcher -------------------------------------------------------
+    async def _reload_watcher() -> None:
+        """Watch for SIGHUP reload events and apply config changes."""
+        while not _shutdown_event.is_set():
+            _reload_event.clear()
+            # Wait for either a reload signal or shutdown.
+            reload_task = asyncio.create_task(_reload_event.wait())
+            shutdown_task = asyncio.create_task(_shutdown_event.wait())
+            done, pending = await asyncio.wait(
+                {reload_task, shutdown_task},
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            for t in pending:
+                t.cancel()
+
+            if _shutdown_event.is_set():
+                break
+
+            # SIGHUP received — reload config.
+            log.info("Reloading configuration from %s", _config_path)
+            try:
+                new_cfg = load_config(_config_path)
+            except ConfigError as exc:
+                log.error("Config reload failed — keeping current config: %s", exc)
+                continue
+
+            # Apply per-server config changes (timeouts, MOTDs, kick message).
+            for name, sm in state_machines.items():
+                if name in new_cfg.servers:
+                    new_srv = new_cfg.servers[name]
+                    sm.cfg.idle_timeout_minutes = new_srv.idle_timeout_minutes
+                    sm.cfg.start_timeout_seconds = new_srv.start_timeout_seconds
+                    sm.cfg.motd_hibernating = new_srv.motd_hibernating
+                    sm.cfg.kick_message = new_srv.kick_message
+                    log.info("Server '%s': config updated (idle=%dm, motd='%s')",
+                             name, new_srv.idle_timeout_minutes, new_srv.motd_hibernating)
+
+            # Apply cooldown changes.
+            for name, sm in state_machines.items():
+                sm.cooldowns = new_cfg.cooldowns
+
+            # Apply polling interval.
+            idle_mon._poll_cfg = new_cfg.polling
+
+            log.info("Configuration reloaded successfully.")
+
     # -- Run ------------------------------------------------------------------
     log.info("Starting idle monitor and proxy manager…")
     try:
         await asyncio.gather(
             idle_mon.run(_shutdown_event),
             proxy_mgr.run(_shutdown_event),
+            _reload_watcher(),
         )
     except asyncio.CancelledError:
         pass
@@ -130,6 +183,13 @@ def _request_shutdown(sig: signal.Signals) -> None:
     log.info("Received %s, shutting down…", sig.name)
     if _shutdown_event is not None:
         _shutdown_event.set()
+
+
+def _request_reload() -> None:
+    """Signal handler — set the reload event."""
+    log.info("Received SIGHUP, scheduling config reload…")
+    if _reload_event is not None:
+        _reload_event.set()
 
 
 def main() -> None:
