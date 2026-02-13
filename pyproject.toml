@@ -1,0 +1,24 @@
+[project]
+name = "crafty-server-starter"
+version = "1.0.0"
+description = "Auto-hibernate idle Minecraft servers and wake them on player connect via Crafty Controller API v2"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+dependencies = ["pyyaml>=6.0"]
+
+[project.scripts]
+crafty-server-starter = "crafty_server_starter.__main__:main"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
+ignore = [
+    "E501",   # line too long — handled by formatter
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["crafty_server_starter"]

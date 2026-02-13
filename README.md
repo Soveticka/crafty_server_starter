@@ -1,12 +1,22 @@
 # Crafty Server Starter
 
+[![Lint](https://github.com/Soveticka/crafty_server_starter/actions/workflows/lint.yml/badge.svg)](https://github.com/Soveticka/crafty_server_starter/actions/workflows/lint.yml)
+[![Docker Build](https://github.com/Soveticka/crafty_server_starter/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Soveticka/crafty_server_starter/actions/workflows/docker-build.yml)
+[![CodeQL](https://github.com/Soveticka/crafty_server_starter/actions/workflows/codeql.yml/badge.svg)](https://github.com/Soveticka/crafty_server_starter/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/github/license/Soveticka/crafty_server_starter)](LICENSE)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
+
 Auto-hibernate idle Minecraft servers and wake them on player connect, powered by the [Crafty Controller](https://craftycontrol.com) ([GitHub](https://gitlab.com/crafty-controller/crafty-4)) API v2.
 
 ## Features
 
 - **Idle shutdown** — Stops servers via Crafty API when 0 players for a configurable duration
 - **Wake-on-connect** — Binds to MC ports while servers are offline; shows a custom MOTD and kicks login attempts with a "starting…" message, then triggers a start via Crafty API
-- **Multi-server** — Manage any number of Minecraft Java servers, each on a separate port
+- **Multi-server** — Manage any number of Minecraft Java & Bedrock servers, each on a separate port
+- **Bedrock Edition support** — UDP/RakNet proxy for Bedrock servers alongside Java TCP proxies
+- **Health & metrics** — `/health`, `/status` (JSON), and `/metrics` (Prometheus) endpoints
+- **Discord notifications** — Webhook alerts on server start, stop, and crash events
+- **Config hot-reload** — Send SIGHUP to reload timeouts, MOTDs, and cooldowns without restart
 - **Anti-flap** — Start grace, stop cooldown, and cycle-count-based flap guard
 - **Minimal dependencies** — Python 3.11 + PyYAML only
 
@@ -160,10 +170,15 @@ Single Python asyncio daemon:
 | Module | Purpose |
 |---|---|
 | `idle_monitor.py` | Polls Crafty API, drives per-server state machine |
-| `proxy_listener.py` | Per-port TCP server (fake MC protocol) |
-| `mc_protocol.py` | Minecraft protocol parsing (handshake, status, login) |
+| `proxy_listener.py` | Per-port TCP proxy (Java Edition fake MC protocol) |
+| `bedrock_proxy.py` | Per-port UDP proxy (Bedrock Edition RakNet protocol) |
+| `mc_protocol.py` | Java Edition protocol parsing (handshake, status, login) |
+| `bedrock_protocol.py` | RakNet protocol helpers (ping/pong, connection reject) |
 | `crafty_api.py` | Async Crafty API v2 client (stdlib `http.client`) |
 | `server_state.py` | 7-state machine with timing/cooldown logic |
+| `health_server.py` | HTTP server for `/health`, `/status`, `/metrics` |
+| `metrics.py` | Prometheus text exposition format generator |
+| `webhook.py` | Discord/generic webhook notifications |
 | `config.py` | YAML config loader and validation |
 | `logger.py` | Rotating file + stderr logging |
 
