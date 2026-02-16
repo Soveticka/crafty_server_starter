@@ -79,6 +79,7 @@ async def _run(config_path: str) -> None:
 
     # -- Build components (imported here to avoid circular imports) -----------
     from .crafty_api import CraftyApiClient
+    from .health_server import HealthServer
     from .idle_monitor import IdleMonitor
     from .proxy_listener import ProxyManager
     from .webhook import WebhookNotifier
@@ -131,6 +132,16 @@ async def _run(config_path: str) -> None:
         webhook=webhook,
     )
 
+    # -- Health / metrics server (optional) -----------------------------------
+    health_srv: HealthServer | None = None
+    if cfg.health.enabled:
+        health_srv = HealthServer(
+            state_machines=state_machines,
+            host=cfg.health.host,
+            port=cfg.health.port,
+        )
+        log.info(f"Health endpoint enabled on {cfg.health.host}:{cfg.health.port}")
+
     # -- Reload watcher -------------------------------------------------------
     async def _reload_watcher() -> None:
         """Watch for SIGHUP reload events and apply config changes."""
@@ -179,13 +190,18 @@ async def _run(config_path: str) -> None:
             log.info("Configuration reloaded successfully.")
 
     # -- Run ------------------------------------------------------------------
+    # Collect coroutines to run.
+    tasks = [
+        idle_mon.run(_shutdown_event),
+        proxy_mgr.run(_shutdown_event),
+        _reload_watcher(),
+    ]
+    if health_srv is not None:
+        tasks.append(health_srv.run(_shutdown_event))
+
     log.info("Starting idle monitor and proxy manager…")
     with contextlib.suppress(asyncio.CancelledError):
-        await asyncio.gather(
-            idle_mon.run(_shutdown_event),
-            proxy_mgr.run(_shutdown_event),
-            _reload_watcher(),
-        )
+        await asyncio.gather(*tasks)
 
     log.info("Shutdown complete.")
 
