@@ -1,8 +1,9 @@
-"""Lightweight HTTP health-check and status server.
+"""Lightweight HTTP health-check, status, and metrics server.
 
-Exposes two endpoints:
-- GET /health  → 200 OK (for Docker HEALTHCHECK / Uptime Kuma)
-- GET /status  → 200 JSON with per-server state details
+Exposes three endpoints:
+- GET /health   → 200 OK (for Docker HEALTHCHECK / Uptime Kuma)
+- GET /status   → 200 JSON with per-server state details
+- GET /metrics  → 200 Prometheus text exposition format
 """
 
 from __future__ import annotations
@@ -14,6 +15,7 @@ import time
 from http import HTTPStatus
 from typing import Any
 
+from .metrics import generate_metrics
 from .server_state import ServerStateMachine
 
 log = logging.getLogger(__name__)
@@ -91,6 +93,9 @@ class HealthServer:
             elif path == "/status":
                 body = self._build_status_json()
                 self._send_json(writer, HTTPStatus.OK, body)
+            elif path == "/metrics":
+                body = self._build_metrics()
+                self._send_plain(writer, HTTPStatus.OK, body)
             else:
                 self._send_response(writer, HTTPStatus.NOT_FOUND, "Not Found")
 
@@ -123,6 +128,18 @@ class HealthServer:
             "servers": servers,
         }
 
+    def _build_metrics(self) -> str:
+        """Generate Prometheus text exposition payload."""
+        uptime = time.monotonic() - self._start_time
+        start_counts = {name: sm.start_count for name, sm in self._sms.items()}
+        stop_counts = {name: sm.stop_count for name, sm in self._sms.items()}
+        return generate_metrics(
+            state_machines=self._sms,
+            uptime_seconds=uptime,
+            start_count=start_counts,
+            stop_count=stop_counts,
+        )
+
     @staticmethod
     def _send_response(writer: asyncio.StreamWriter, status: HTTPStatus, body: str) -> None:
         response = (
@@ -147,3 +164,15 @@ class HealthServer:
             f"{body}"
         )
         writer.write(response.encode("utf-8"))
+
+    @staticmethod
+    def _send_plain(writer: asyncio.StreamWriter, status: HTTPStatus, body: str) -> None:
+        encoded = body.encode("utf-8")
+        header = (
+            f"HTTP/1.1 {status.value} {status.phrase}\r\n"
+            f"Content-Type: text/plain; version=0.0.4; charset=utf-8\r\n"
+            f"Content-Length: {len(encoded)}\r\n"
+            f"Connection: close\r\n"
+            f"\r\n"
+        )
+        writer.write(header.encode("utf-8") + encoded)
