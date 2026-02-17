@@ -12,7 +12,7 @@ from __future__ import annotations
 from .server_state import ServerStateMachine
 
 # Prefix for all metrics
-_NS = "crafty_starter"
+_NS = "crafty_watcher"
 
 
 def _gauge(name: str, help_text: str, labels: dict[str, str], value: float | int) -> str:

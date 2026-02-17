@@ -1,20 +1,20 @@
 [Unit]
-Description=Crafty Server Starter — auto-hibernate and wake Minecraft servers
-Documentation=https://github.com/your-repo/crafty-server-starter
+Description=Crafty Server Watcher — auto-hibernate and wake Minecraft servers
+Documentation=https://github.com/your-repo/crafty-server-watcher
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=exec
-ExecStart=/opt/crafty-server-starter/venv/bin/python -m crafty_server_starter --config /etc/crafty-server-starter/config.yaml
-WorkingDirectory=/opt/crafty-server-starter
+ExecStart=/opt/crafty-server-watcher/venv/bin/python -m crafty_server_watcher --config /etc/crafty-server-watcher/config.yaml
+WorkingDirectory=/opt/crafty-server-watcher
 
 # ── Credentials ──────────────────────────────────────────────────
-EnvironmentFile=-/etc/crafty-server-starter/env
+EnvironmentFile=-/etc/crafty-server-watcher/env
 
 # ── Service identity ─────────────────────────────────────────────
-User=crafty-starter
-Group=crafty-starter
+User=crafty-watcher
+Group=crafty-watcher
 
 # ── Sandboxing ───────────────────────────────────────────────────
 NoNewPrivileges=yes
@@ -29,7 +29,7 @@ RestrictRealtime=yes
 RestrictSUIDSGID=yes
 MemoryDenyWriteExecute=yes
 LockPersonality=yes
-ReadWritePaths=/var/log/crafty-server-starter
+ReadWritePaths=/var/log/crafty-server-watcher
 
 # ── Capabilities (only needed if binding to port < 1024) ───────
 AmbientCapabilities=CAP_NET_BIND_SERVICE

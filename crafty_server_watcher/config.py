@@ -1,4 +1,4 @@
-"""YAML configuration loader and validation for Crafty Server Starter."""
+"""YAML configuration loader and validation for Crafty Server Watcher."""
 
 from __future__ import annotations
 
@@ -88,7 +88,7 @@ class WebhookConfig:
 
     enabled: bool = False
     url: str = ""
-    label: str = "Crafty Server Starter"
+    label: str = "Crafty Server Watcher"
 
 
 @dataclass
@@ -96,7 +96,7 @@ class LoggingConfig:
     """Logging destination and rotation settings."""
 
     level: str = "INFO"
-    file: str = "/var/log/crafty-server-starter/service.log"
+    file: str = "/var/log/crafty-server-watcher/service.log"
     max_bytes: int = 10_485_760  # 10 MB
     backup_count: int = 5
 

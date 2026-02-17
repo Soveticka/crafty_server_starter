@@ -1,4 +1,4 @@
-"""Logging setup for Crafty Server Starter.
+"""Logging setup for Crafty Server Watcher.
 
 Configures:
 - A RotatingFileHandler for the dedicated log file.

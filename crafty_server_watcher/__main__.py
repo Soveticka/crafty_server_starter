@@ -1,6 +1,6 @@
-"""Entry point for Crafty Server Starter.
+"""Entry point for Crafty Server Watcher.
 
-Run with:  python -m crafty_server_starter [--config /path/to/config.yaml]
+Run with:  python -m crafty_server_watcher [--config /path/to/config.yaml]
 """
 
 from __future__ import annotations
@@ -16,9 +16,9 @@ from . import __version__
 from .config import ConfigError, load_config
 from .logger import setup_logging
 
-log = logging.getLogger("crafty_server_starter")
+log = logging.getLogger("crafty_server_watcher")
 
-DEFAULT_CONFIG_PATH = "/etc/crafty-server-starter/config.yaml"
+DEFAULT_CONFIG_PATH = "/etc/crafty-server-watcher/config.yaml"
 
 # Will be set by main() so signal handlers can request shutdown.
 _shutdown_event: asyncio.Event | None = None
@@ -28,7 +28,7 @@ _config_path: str = DEFAULT_CONFIG_PATH
 
 def _parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="crafty-server-starter",
+        prog="crafty-server-watcher",
         description="Auto-hibernate and wake Minecraft servers via Crafty API v2.",
     )
     parser.add_argument(
@@ -60,7 +60,7 @@ async def _run(config_path: str) -> None:
         sys.exit(1)
 
     setup_logging(cfg.logging)
-    log.info(f"Crafty Server Starter v{__version__} starting")
+    log.info(f"Crafty Server Watcher v{__version__} starting")
     log.info(f"Managing {len(cfg.servers)} server(s)")
 
     # -- Events ---------------------------------------------------------------

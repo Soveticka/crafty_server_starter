@@ -1,7 +1,7 @@
 # ═══════════════════════════════════════════════════════════════════
-# Crafty Server Starter — configuration
+# Crafty Server Watcher — configuration
 # ═══════════════════════════════════════════════════════════════════
-# Copy this file to /etc/crafty-server-starter/config.yaml and edit.
+# Copy this file to /etc/crafty-server-watcher/config.yaml and edit.
 # The API token is NOT stored here — set the environment variable
 # referenced by crafty.api_token_env (default: CRAFTY_API_TOKEN).
 # ═══════════════════════════════════════════════════════════════════
@@ -62,7 +62,7 @@ cooldowns:
 # ── Logging ─────────────────────────────────────────────────────
 logging:
   level: "INFO"
-  file: "/var/log/crafty-server-starter/service.log"
+  file: "/var/log/crafty-server-watcher/service.log"
   max_bytes: 10485760    # 10 MB
   backup_count: 5
 
@@ -72,7 +72,7 @@ logging:
 webhook:
   enabled: false
   url: "https://discord.com/api/webhooks/YOUR_ID/YOUR_TOKEN"
-  label: "Crafty Server Starter"    # shown in embed footer
+  label: "Crafty Server Watcher"    # shown in embed footer
 # ── Health endpoint ───────────────────────────────────────────
 health:
   enabled: true           # set to false to disable

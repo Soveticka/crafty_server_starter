@@ -1,9 +1,9 @@
-# Crafty Server Starter
+# Crafty Server Watcher
 
-[![Lint](https://github.com/Soveticka/crafty_server_starter/actions/workflows/lint.yml/badge.svg)](https://github.com/Soveticka/crafty_server_starter/actions/workflows/lint.yml)
-[![Docker Build](https://github.com/Soveticka/crafty_server_starter/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Soveticka/crafty_server_starter/actions/workflows/docker-build.yml)
-[![CodeQL](https://github.com/Soveticka/crafty_server_starter/actions/workflows/codeql.yml/badge.svg)](https://github.com/Soveticka/crafty_server_starter/actions/workflows/codeql.yml)
-[![License: MIT](https://img.shields.io/github/license/Soveticka/crafty_server_starter)](LICENSE)
+[![Lint](https://github.com/Soveticka/crafty-server-watcher/actions/workflows/lint.yml/badge.svg)](https://github.com/Soveticka/crafty-server-watcher/actions/workflows/lint.yml)
+[![Docker Build](https://github.com/Soveticka/crafty-server-watcher/actions/workflows/docker-build.yml/badge.svg)](https://github.com/Soveticka/crafty-server-watcher/actions/workflows/docker-build.yml)
+[![CodeQL](https://github.com/Soveticka/crafty-server-watcher/actions/workflows/codeql.yml/badge.svg)](https://github.com/Soveticka/crafty-server-watcher/actions/workflows/codeql.yml)
+[![License: MIT](https://img.shields.io/github/license/Soveticka/crafty-server-watcher)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://www.python.org/downloads/)
 
 Auto-hibernate idle Minecraft servers and wake them on player connect, powered by the [Crafty Controller](https://craftycontrol.com) ([GitHub](https://gitlab.com/crafty-controller/crafty-4)) API v2.
@@ -32,8 +32,8 @@ Auto-hibernate idle Minecraft servers and wake them on player connect, powered b
 ### 1. Create your config
 
 ```bash
-mkdir crafty-server-starter && cd crafty-server-starter
-curl -O https://raw.githubusercontent.com/Soveticka/crafty-server-starter/main/config.example.yaml
+mkdir crafty-server-watcher && cd crafty-server-watcher
+curl -O https://raw.githubusercontent.com/Soveticka/crafty-server-watcher/main/config.example.yaml
 cp config.example.yaml config.yaml
 nano config.yaml    # set your Crafty server UUIDs and ports
 ```
@@ -49,9 +49,9 @@ chmod 600 .env
 
 ```yaml
 services:
-  crafty-server-starter:
-    image: ghcr.io/Soveticka/crafty-server-starter:latest
-    container_name: crafty-server-starter
+  crafty-server-watcher:
+    image: ghcr.io/Soveticka/crafty-server-watcher:latest
+    container_name: crafty-server-watcher
     restart: unless-stopped
     network_mode: host
     volumes:
@@ -93,41 +93,41 @@ docker compose up -d
 
 ```bash
 # 1. Clone
-sudo git clone https://github.com/Soveticka/crafty-server-starter.git /opt/crafty-server-starter
-cd /opt/crafty-server-starter
+sudo git clone https://github.com/Soveticka/crafty-server-watcher.git /opt/crafty-server-watcher
+cd /opt/crafty-server-watcher
 
 # 2. Run installer (creates user, venv, directories, systemd service)
 sudo bash install.sh
 
 # 3. Configure
-sudo nano /etc/crafty-server-starter/config.yaml   # set server IDs & ports
-sudo nano /etc/crafty-server-starter/env            # set CRAFTY_API_TOKEN
+sudo nano /etc/crafty-server-watcher/config.yaml   # set server IDs & ports
+sudo nano /etc/crafty-server-watcher/env            # set CRAFTY_API_TOKEN
 
 # 4. Start
-sudo systemctl start crafty-server-starter
-sudo systemctl status crafty-server-starter
+sudo systemctl start crafty-server-watcher
+sudo systemctl status crafty-server-watcher
 
 # 5. Logs
-journalctl -u crafty-server-starter -f
-tail -f /var/log/crafty-server-starter/service.log
+journalctl -u crafty-server-watcher -f
+tail -f /var/log/crafty-server-watcher/service.log
 ```
 
 ### Updating (Manual)
 
 ```bash
-cd /opt/crafty-server-starter
-sudo systemctl stop crafty-server-starter
+cd /opt/crafty-server-watcher
+sudo systemctl stop crafty-server-watcher
 sudo git pull
 sudo find . -type d -name __pycache__ -exec rm -rf {} +
-sudo systemctl start crafty-server-starter
+sudo systemctl start crafty-server-watcher
 ```
 
 If the systemd service file changed:
 
 ```bash
-sudo cp systemd/crafty-server-starter.service /etc/systemd/system/
+sudo cp systemd/crafty-server-watcher.service /etc/systemd/system/
 sudo systemctl daemon-reload
-sudo systemctl restart crafty-server-starter
+sudo systemctl restart crafty-server-watcher
 ```
 
 </details>
@@ -140,7 +140,7 @@ See [`config.example.yaml`](config.example.yaml) for all available options.
 
 ### Crafty API Setup
 
-1. Create a **dedicated Crafty user** (e.g., `auto-starter`)
+1. Create a **dedicated Crafty user** (e.g., `auto-watcher`)
 2. Create a **role** with only **Commands** permission on your managed servers
 3. Assign the role to the user
 4. Generate a long-lived API token for this user

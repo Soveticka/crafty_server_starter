@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # ═══════════════════════════════════════════════════════════════════
-# Crafty Server Starter — installation script
+# Crafty Server Watcher — installation script
 # ═══════════════════════════════════════════════════════════════════
 # Run as root.  Installs the Python package, creates the system user,
 # sets up directories, and enables the systemd service.
 # ═══════════════════════════════════════════════════════════════════
 set -euo pipefail
 
-INSTALL_DIR="/opt/crafty-server-starter"
-CONFIG_DIR="/etc/crafty-server-starter"
-LOG_DIR="/var/log/crafty-server-starter"
-SERVICE_USER="crafty-starter"
-SERVICE_GROUP="crafty-starter"
+INSTALL_DIR="/opt/crafty-server-watcher"
+CONFIG_DIR="/etc/crafty-server-watcher"
+LOG_DIR="/var/log/crafty-server-watcher"
+SERVICE_USER="crafty-watcher"
+SERVICE_GROUP="crafty-watcher"
 
 # ── Pre-flight checks ──────────────────────────────────────────
 if [[ $EUID -ne 0 ]]; then
@@ -24,7 +24,7 @@ if ! command -v python3 &>/dev/null; then
     exit 1
 fi
 
-echo "=== Crafty Server Starter — Installer ==="
+echo "=== Crafty Server Watcher — Installer ==="
 
 # ── Create service user ────────────────────────────────────────
 if ! id -u "$SERVICE_USER" &>/dev/null; then
@@ -41,7 +41,7 @@ mkdir -p "$LOG_DIR"
 # ── Copy source code ──────────────────────────────────────────
 echo "Installing source code to $INSTALL_DIR…"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cp -r "$SCRIPT_DIR/crafty_server_starter" "$INSTALL_DIR/"
+cp -r "$SCRIPT_DIR/crafty_server_watcher" "$INSTALL_DIR/"
 
 # ── Python virtual environment ─────────────────────────────────
 echo "Setting up Python virtual environment…"
@@ -78,9 +78,9 @@ chmod 750 "$LOG_DIR"
 
 # ── systemd ────────────────────────────────────────────────────
 echo "Installing systemd service…"
-cp "$SCRIPT_DIR/systemd/crafty-server-starter.service" /etc/systemd/system/
+cp "$SCRIPT_DIR/systemd/crafty-server-watcher.service" /etc/systemd/system/
 systemctl daemon-reload
-systemctl enable crafty-server-starter.service
+systemctl enable crafty-server-watcher.service
 
 echo ""
 echo "=== Installation complete ==="
@@ -88,7 +88,7 @@ echo ""
 echo "Next steps:"
 echo "  1. Edit $CONFIG_DIR/config.yaml with your server details."
 echo "  2. Edit $CONFIG_DIR/env with your Crafty API token."
-echo "  3. Start the service:  systemctl start crafty-server-starter"
-echo "  4. Check status:       systemctl status crafty-server-starter"
-echo "  5. View logs:          journalctl -u crafty-server-starter -f"
+echo "  3. Start the service:  systemctl start crafty-server-watcher"
+echo "  4. Check status:       systemctl status crafty-server-watcher"
+echo "  5. View logs:          journalctl -u crafty-server-watcher -f"
 echo "                         tail -f $LOG_DIR/service.log"

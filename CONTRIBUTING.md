@@ -1,4 +1,4 @@
-# Contributing to Crafty Server Starter
+# Contributing to Crafty Server Watcher
 
 Thanks for considering a contribution! Here's how to get started.
 
@@ -6,8 +6,8 @@ Thanks for considering a contribution! Here's how to get started.
 
 ```bash
 # Clone
-git clone https://github.com/Soveticka/crafty-server-starter.git
-cd crafty-server-starter
+git clone https://github.com/Soveticka/crafty-server-watcher.git
+cd crafty-server-watcher
 
 # Create a virtual environment
 python -m venv .venv
@@ -66,7 +66,7 @@ Label your PRs for automatic release note categorization:
 ## Project Structure
 
 ```
-crafty_server_starter/
+crafty_server_watcher/
 ├── __init__.py          # Package metadata
 ├── __main__.py          # Entry point, signal handling, asyncio loop
 ├── config.py            # YAML config loader and validation

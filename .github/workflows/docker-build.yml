@@ -6,12 +6,12 @@ on:
     tags: ['v*']
     paths:
       - 'Dockerfile'
-      - 'crafty_server_starter/**'
+      - 'crafty_server_watcher/**'
   pull_request:
     branches: [main]
     paths:
       - 'Dockerfile'
-      - 'crafty_server_starter/**'
+      - 'crafty_server_watcher/**'
 
 env:
   REGISTRY: ghcr.io

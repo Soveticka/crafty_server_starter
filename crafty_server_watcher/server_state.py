@@ -1,4 +1,4 @@
-"""Per-server state tracking and transitions for Crafty Server Starter."""
+"""Per-server state tracking and transitions for Crafty Server Watcher."""
 
 from __future__ import annotations
 

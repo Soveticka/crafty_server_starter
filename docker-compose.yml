@@ -1,7 +1,7 @@
 services:
-  crafty-server-starter:
-    image: ghcr.io/Soveticka/crafty-server-starter:latest
-    container_name: crafty-server-starter
+  crafty-server-watcher:
+    image: ghcr.io/Soveticka/crafty-server-watcher:latest
+    container_name: crafty-server-watcher
     restart: unless-stopped
     network_mode: host # Required: bind directly to host ports for MC clients
     volumes:
