@@ -1,0 +1,78 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the sections below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Configure server with...
+        2. Start the service...
+        3. Connect with...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      options:
+        - Docker
+        - Docker Compose
+        - Manual (systemd)
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Server Edition
+      options:
+        - Java
+        - Bedrock
+        - Both
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs
+      description: Paste any relevant log output (redact sensitive info like API tokens).
+      render: text
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Any additional context about your setup.
+      placeholder: |
+        - OS: Ubuntu 24.04
+        - Python: 3.11
+        - Crafty Controller: 4.4.x
+        - Docker version (if applicable): 27.x
