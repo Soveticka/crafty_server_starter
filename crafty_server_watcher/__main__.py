@@ -78,6 +78,7 @@ async def _run(config_path: str) -> None:
         pass
 
     # -- Build components (imported here to avoid circular imports) -----------
+    from .bedrock_proxy import BedrockProxyManager
     from .crafty_api import CraftyApiClient
     from .health_server import HealthServer
     from .idle_monitor import IdleMonitor
@@ -122,7 +123,31 @@ async def _run(config_path: str) -> None:
         )
         log.info("Webhook notifications enabled")
 
-    proxy_mgr = ProxyManager(state_machines=state_machines, crafty_api=api, webhook=webhook)
+    # -- Split servers by edition (Java vs Bedrock) ---------------------------
+    java_sms: dict[str, ServerStateMachine] = {}
+    bedrock_sms: dict[str, ServerStateMachine] = {}
+    for name, sm in state_machines.items():
+        if sm.cfg.edition == "bedrock":
+            bedrock_sms[name] = sm
+        else:
+            java_sms[name] = sm
+
+    if java_sms:
+        log.info(f"Java servers: {', '.join(java_sms)}")
+    if bedrock_sms:
+        log.info(f"Bedrock servers: {', '.join(bedrock_sms)}")
+
+    proxy_mgr = ProxyManager(state_machines=java_sms, crafty_api=api, webhook=webhook)
+
+    # -- Bedrock proxy (optional) ---------------------------------------------
+    bedrock_mgr: BedrockProxyManager | None = None
+    if bedrock_sms:
+        bedrock_mgr = BedrockProxyManager(
+            state_machines=bedrock_sms,
+            crafty_api=api,
+        )
+        log.info(f"Bedrock proxy enabled for {len(bedrock_sms)} server(s)")
+
     idle_mon = IdleMonitor(
         state_machines=state_machines,
         crafty_api=api,
@@ -198,6 +223,8 @@ async def _run(config_path: str) -> None:
     ]
     if health_srv is not None:
         tasks.append(health_srv.run(_shutdown_event))
+    if bedrock_mgr is not None:
+        tasks.append(bedrock_mgr.run(_shutdown_event))
 
     log.info("Starting idle monitor and proxy manager…")
     with contextlib.suppress(asyncio.CancelledError):
